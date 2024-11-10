@@ -148,7 +148,6 @@ class WordFamily:
         difficulty: An integer representing the cumulative difficulty of this word family.
     """
 
-    COLOR_DIFFICULTY = {CORRECT_COLOR: 0, WRONG_SPOT_COLOR: 1, NOT_IN_WORD_COLOR: 2}
     def __init__(self, feedback_colors, words):
         """
         Initializes the WordFamily instance with a feedback color list and a list of corresponding
@@ -165,7 +164,7 @@ class WordFamily:
         """
         self.feedback_colors = feedback_colors
         self.words = words
-        self.difficulty = sum(WordFamily.COLOR_DIFFICULTY[color] for color in feedback_colors)
+        self.difficulty = sum(COLOR_DIFFICULTY[color] for color in feedback_colors)
 
     def __lt__(self, other):
         """
@@ -357,6 +356,7 @@ def merge(left, right):
     sorted_list.extend(right[j:])
     return sorted_list
 
+
 # TODO: Modify this helper function. You may delete this comment when you are done.
 def get_feedback_colors(secret_word, guessed_word):
     """
@@ -375,9 +375,7 @@ def get_feedback_colors(secret_word, guessed_word):
             length 5 with the ANSI coloring in each index as the returned value.
     """
     feedback = [None] * NUM_LETTERS
-    secret_word_count = {}
-    for letter in secret_word:
-        secret_word_count[letter] = secret_word_count.get(letter, 0) + 1
+    secret_word_count = {letter: secret_word.count(letter) for letter in secret_word}
 
     for i in range(NUM_LETTERS):
         if guessed_word[i] == secret_word[i]:
@@ -419,18 +417,14 @@ def get_feedback(remaining_secret_words, guessed_word):
             2. Difficulty of the feedback
             3. Lexicographical ordering of the feedback (ASCII value comparisons)
     """
-    families = {}
+    families = defaultdict(list)
     for word in remaining_secret_words:
         feedback_colors = get_feedback_colors(word, guessed_word)
-        if feedback_colors not in families:
-            families[feedback_colors] = []
-        families[feedback_colors].append(word)
+        families[tuple(feedback_colors)].append(word)
 
-    # Create and sort WordFamily instances
-    word_families = [WordFamily(pattern, words) for pattern, words in families.items()]
+    word_families = [WordFamily(list(pattern), words) for pattern, words in families.items()]
     sorted_families = fast_sort(word_families)
-    hardest_family = sorted_families[0]  # Now the hardest family is first
-
+    hardest_family = sorted_families[0]
     return hardest_family.feedback_colors, hardest_family.words
 
 # DO NOT modify this function.
