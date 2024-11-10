@@ -126,16 +126,13 @@ class Keyboard:
               and arranged to match a typical keyboard layout.
         """
         rows = ["", "", ""]
-        index = 0
         for row_index, row_letters in enumerate(self.rows):
             for letter in row_letters:
                 color = self.colors[letter]
                 rows[row_index] += color_word(color, letter) + " "
-            rows[row_index] = rows[row_index].strip()  # Remove trailing space
-
-        # Join rows with newline characters
-        return "\n".join(rows)     
-
+            rows[row_index] = rows[row_index].strip()  # Remove trailing space from each row
+        return "\n".join(rows)
+    
 class WordFamily:
     """
     A class representing a group or 'family' of words that match a specific pattern
@@ -348,12 +345,16 @@ def fast_sort(lst):
 
 def merge(left, right):
     sorted_list = []
-    while left and right:
-        if left[0] < right[0]:
-            sorted_list.append(left.pop(0))
+    i, j = 0, 0
+    while i < len(left) and j < len(right):
+        if left[i] < right[j]:
+            sorted_list.append(left[i])
+            i += 1
         else:
-            sorted_list.append(right.pop(0))
-    sorted_list.extend(left if left else right)
+            sorted_list.append(right[j])
+            j += 1
+    sorted_list.extend(left[i:])
+    sorted_list.extend(right[j:])
     return sorted_list
 
 # TODO: Modify this helper function. You may delete this comment when you are done.
@@ -421,13 +422,16 @@ def get_feedback(remaining_secret_words, guessed_word):
     families = {}
     for word in remaining_secret_words:
         feedback_colors = get_feedback_colors(word, guessed_word)
-        families[feedback_colors] = families.get(feedback_colors, []) + [word]
+        if feedback_colors not in families:
+            families[feedback_colors] = []
+        families[feedback_colors].append(word)
 
-    families = [WordFamily(pattern, words) for pattern, words in families.items()]
-    families = fast_sort(families)
+    # Create and sort WordFamily instances
+    word_families = [WordFamily(pattern, words) for pattern, words in families.items()]
+    sorted_families = fast_sort(word_families)
+    hardest_family = sorted_families[0]  # Now the hardest family is first
 
-    return families[-1].pattern, families[-1].words
-
+    return hardest_family.feedback_colors, hardest_family.words
 
 # DO NOT modify this function.
 def main():
